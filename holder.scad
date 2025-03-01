@@ -24,9 +24,11 @@ $wireHolderLen = 120;
 
 $proto = [81, 51];
 $protoTh = 1;
-$protoPosY = $len + ($wireHolderLen * (20 / 100)); //20% down wire arm
+$protoPosY = $len + ($wireHolderLen * (0 / 100)); //% down wire arm
 $protoBottomBuff = 5;
 $protoTopBuff = 1;
+$protoShellBuff = 4;
+$protoClipTh = 2;
 
 $fn = 50;
 
@@ -81,10 +83,27 @@ difference() {
 }
 
 // Add protoboard clip
-translate([$outerCase[0] - ($caseTh / 2), $protoPosY, (($outerCase[1] - $caseTh) / 2) - ($proto[1] / 2) + $wireHolder[0]])
+translate([$outerCase[0] - ($caseTh / 2), $protoPosY, 0])
 difference() {
-	//cube(size = [$protoBottomBuff + $protoTh + $protoTopBuff, $proto[0], $proto[1]]);
-	// cut angle to make it printable
-	//polyhedron([
-		//[
+	cube(size = [$protoBottomBuff + $protoTh + $protoTopBuff + $protoShellBuff, $proto[0] + $protoShellBuff, $proto[1] + $protoShellBuff]);
+	translate([$protoShellBuff, 0, ($protoShellBuff / 2) + ($protoClipTh / 2)])
+	cube(size = [$protoBottomBuff + $protoTh + $protoTopBuff + $protoShellBuff, $proto[0] + $protoShellBuff, $proto[1] - ($protoClipTh)]);
+	translate([$protoShellBuff + $protoBottomBuff, 0, ($protoShellBuff / 2)])
+	cube(size = [$protoTh, $proto[0] + $protoShellBuff, $proto[1]]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
