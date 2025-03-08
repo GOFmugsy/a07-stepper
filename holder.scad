@@ -23,7 +23,7 @@ $wireHolder = [$caseTh / 2, 5];
 $wireHolderLen = 120;
 
 $proto = [81, 51];
-$protoTh = 1;
+$protoTh = 2;
 $protoPosY = $len + ($wireHolderLen * (0 / 100)); //% down wire arm
 $protoBottomBuff = 5;
 $protoTopBuff = 1;
