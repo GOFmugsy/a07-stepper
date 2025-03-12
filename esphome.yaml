@@ -1,0 +1,114 @@
+esphome:
+  name: esp32s2-volume
+  friendly_name: esp32s2-volume
+
+esp32:
+  board: esp32-s2-saola-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "MpwHfbsppd1VqPySjbYPHnZlyB43+o708Bhcu6x/a5o="
+
+ota:
+  - platform: esphome
+    password: "0500900d196d5c941588ceae01effd6b"
+
+wifi:
+  networks:
+  - ssid: !secret wifi_ssid
+    password: !secret wifi_password
+  - ssid: !secret apt_wifi_ssid
+    password: !secret apt_wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32S2-Volume Fallback Hotspot"
+    password: "ASIUclMuug3a"
+
+captive_portal:
+
+number:
+  - platform: template
+    name: "Volume"
+    id: vol
+    optimistic: true
+    min_value: 0
+    max_value: 100
+    step: 1
+    on_value:
+      - logger.log:
+          format: "Volume at %.1f"
+          args: [ 'id(vol)']
+
+stepper:
+  - platform: a4988
+    id: my_stepper
+    step_pin: GPIO17
+    dir_pin: 
+      number: GPIO18
+      inverted: True
+    sleep_pin: GPIO9
+    max_speed: 1000 steps/s
+    acceleration: 500
+    deceleration: 500
+
+button:
+  - platform: template
+    name: Volume Up
+    id: volUp
+    on_press: 
+      then:
+        - stepper.set_target:
+            id: my_stepper
+            target: !lambda 'return id(my_stepper).current_position + 10;'
+        - number.set:
+            id: vol
+            value: !lambda 'return id(vol).state + 10;'
+
+  - platform: template
+    name: Volume Down
+    id: volDn
+    on_press: 
+      then:
+        - if:
+            condition:
+              lambda: 'return id(vol).state > 0;'
+            then:
+              - stepper.set_target:
+                  id: my_stepper
+                  target: !lambda 'return id(my_stepper).current_position - 10;'
+              - number.set:
+                  id: vol
+                  value: !lambda 'return id(vol).state - 10;'
+            else:
+              - logger.log: "Volume Muted"
+
+remote_receiver:
+  pin: 
+    number: GPIO8
+    inverted: true
+  dump: sony
+  
+  on_sony:
+    then:
+      - if:
+          condition:
+            lambda: 'return (x.data == 0x0000240A);'  # VOL+
+          then:
+            - logger.log: "Volume Up Pressed"
+            - button.press: volUp
+            - delay: 1s
+      - if:
+          condition:
+            lambda: 'return (x.data == 0x0000640A);' # VOL-
+          then:
+            - logger.log: "Volume Down Pressed"
+            - button.press: volDn
+            - delay: 1s
+
